@@ -99,7 +99,7 @@ public class DragAndDropDemoState extends BaseAppState {
 
         this.assetManager = app.getAssetManager();
 
-        container1 = new ContainerNode("container2", containerColor);
+        container1 = new ContainerNode("container1", containerColor);
         container1.setSize(GRID_SIZE, GRID_SIZE, 0);
         container1.setLocalTranslation(0f, 0f, 0.5f);
         container1.setLocalScale(LOCAL_SCALE);
