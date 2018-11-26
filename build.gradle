@@ -6,7 +6,7 @@ buildscript {
         // This sucks down a lot of stuff that 'normal' users wouldn't
         // have and won't need anyway.
         if( project.hasProperty('releaseUser') ) {
-            classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
+            classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         }
     }
 }
@@ -15,18 +15,12 @@ apply plugin: 'java'
 
 version='1.11.0'
 
-ext.jmeVersion='3.1.0-stable'
+ext.jmeVersion='3.2.1-stable'
 
 ext {
     bintrayLabels = ['jMonkeyEngine', 'gamedev', 'GUI']
     releaseDescription = "Lemur ${project.version}"
     releaseVcsTag = "v${project.version}"
-}
-
-sourceCompatibility = 1.7
-compileJava {
-    options.encoding = 'UTF-8'
-    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
 
 repositories {
@@ -36,6 +30,14 @@ repositories {
 
 dependencies {
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
+    compile 'com.simsilica:lemur-proto:1.9.1'
+    compile "org.jmonkeyengine:jme3-blender:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-desktop:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-effects:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-lwjgl3:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-lwjgl3:$jmeVersion"
+    compile 'org.codehaus.groovy:groovy-all:2.5.3'
+    compile "org.slf4j:slf4j-api:1.7.5"
 
     compile 'com.google.guava:guava:19.0'
     compile 'org.slf4j:slf4j-api:1.7.13'
@@ -79,6 +81,8 @@ configure(allprojects.findAll {it.name != 'extensions'}) {
         //maven { url "http://dl.bintray.com/jmonkeyengine/org.jmonkeyengine" }
         jcenter()
     }
+
+    sourceSets.main.java.srcDirs = [ "src/main/java", "examples/demos/src/main/java" ]
 
     /*
     // Configuration to produce maven-repo style -sources and -javadoc jars
@@ -128,5 +132,3 @@ if( project.hasProperty('releaseUser') ) {
     apply plugin: 'com.jfrog.bintray'
     apply from: 'https://raw.githubusercontent.com/Simsilica/gradle-plugins/master/simtools-release.gradle'
 }
-
-
