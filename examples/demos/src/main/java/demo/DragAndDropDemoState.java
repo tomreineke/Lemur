@@ -415,6 +415,10 @@ public class DragAndDropDemoState extends SimpleApplication {
 
             Vector2f hit = getCellLocation(event.getCollision().getContactPoint());
             Spatial item = getModel().getCell((int)hit.x, (int)hit.y);
+            Spatial draggedItem = guiNode.getChild(guiNode.getChildren().size() - 1);
+            Vector3f translation = draggedItem.getLocalTranslation();
+            System.out.println("draggable position x: " + translation.x + ", y: " + translation.y + ", z: " + translation.z);
+
             if( item == null ) {
                 // An empty cell is a valid target
                 event.getSession().setDragStatus(DragStatus.ValidTarget);
