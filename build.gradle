@@ -83,6 +83,7 @@ configure(allprojects.findAll {it.name != 'extensions'}) {
     }
 
     sourceSets.main.java.srcDirs = [ "src/main/java", "examples/demos/src/main/java" ]
+    sourceSets.main.resources.srcDirs = [ "src/main/resources", "examples/demos/src/main/resources" ]
 
     /*
     // Configuration to produce maven-repo style -sources and -javadoc jars
