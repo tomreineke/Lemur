@@ -39,19 +39,14 @@ package demo;
 import java.util.*;
 
 import com.jme3.app.Application;
-import com.jme3.app.state.BaseAppState;
+import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetManager;
 import com.jme3.input.event.*;
-import com.jme3.light.*;
 import com.jme3.material.*;
-import com.jme3.material.RenderState.BlendMode;
-import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.*;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
-import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.*;
-import com.jme3.scene.Spatial.CullHint;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.debug.WireBox;
 import com.jme3.scene.shape.*;
@@ -59,10 +54,10 @@ import com.jme3.scene.shape.*;
 import com.jme3.scene.shape.Line;
 import com.simsilica.lemur.*;
 import com.simsilica.lemur.component.IconComponent;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.dnd.*;
 import com.simsilica.lemur.core.GuiMaterial;
 import com.simsilica.lemur.event.*;
+import com.simsilica.lemur.style.BaseStyles;
 import javafx.util.Pair;
 
 /**
@@ -70,9 +65,7 @@ import javafx.util.Pair;
  *
  *  @author    Paul Speed
  */
-public class DragAndDropDemoState extends BaseAppState {
-
-    private Node dndRoot;
+public class DragAndDropDemoState extends SimpleApplication {
 
     private ColorRGBA containerColor = new ColorRGBA(1, 1, 0, 0.5f);
     private ColorRGBA containerHighlight = new ColorRGBA(0, 1, 0, 0.5f);
@@ -83,25 +76,36 @@ public class DragAndDropDemoState extends BaseAppState {
     private AssetManager assetManager;
 
     private static final int GRID_SIZE = 5;
-    private static final float LOCAL_SCALE = 0.3f;
+    private static final float LOCAL_SCALE = 13.5f;
     private static final float LOCAL_TRANSLATION_FOR_ICONS = 0.6f;
 
     public DragAndDropDemoState() {
     }
 
-    protected Node getRoot() {
-        return dndRoot;
+    @Override
+    public void simpleInitApp() {
+        setPauseOnLostFocus(false);
+        setDisplayFps(false);
+        setDisplayStatView(false);
+
+        GuiGlobals.initialize(this);
+
+        GuiGlobals globals = GuiGlobals.getInstance();
+        BaseStyles.loadGlassStyle();
+        globals.getStyles().setDefaultStyle("glass");
+        initialize(this);
     }
 
-    @Override
-    protected void initialize( Application app ) {
-        dndRoot = new Node("dndRoot");
+    protected Node getRoot() {
+        return guiNode;
+    }
 
+    protected void initialize( Application app ) {
         this.assetManager = app.getAssetManager();
 
         container1 = new ContainerNode("container1", containerColor);
         container1.setSize(GRID_SIZE, GRID_SIZE, 0);
-        container1.setLocalTranslation(0f, 0f, 0.5f);
+        container1.setLocalTranslation(200f, 100f, 0.5f);
         container1.setLocalScale(LOCAL_SCALE);
         MouseEventControl.addListenersToSpatial(container1,
                 new HighlightListener(container1.material,
@@ -109,7 +113,7 @@ public class DragAndDropDemoState extends BaseAppState {
                         containerColor));
         container1.addControl(new GridControl(GRID_SIZE));
         container1.addControl(new DragAndDropControl(new GridContainerListener(container1)));
-        dndRoot.attachChild(container1);
+        getRoot().attachChild(container1);
 
         // Add some random items to our MVC grid 'model' control
         container1.getControl(GridControl.class).setCell(0, 0, createItem());
@@ -118,7 +122,7 @@ public class DragAndDropDemoState extends BaseAppState {
         // Setup a grid based container
         container2 = new ContainerNode("container2", containerColor);
         container2.setSize(GRID_SIZE, GRID_SIZE, 0);
-        container2.setLocalTranslation(4f, 0f, 0.5f);
+        container2.setLocalTranslation(400f, 100f, 0.5f);
         container2.setLocalScale(LOCAL_SCALE);
         MouseEventControl.addListenersToSpatial(container2,
                 new HighlightListener(container2.material,
@@ -126,7 +130,7 @@ public class DragAndDropDemoState extends BaseAppState {
                         containerColor));
         container2.addControl(new GridControl(GRID_SIZE));
         container2.addControl(new DragAndDropControl(new GridContainerListener(container2)));
-        dndRoot.attachChild(container2);
+        getRoot().attachChild(container2);
 
         // Add some random items to our MVC grid 'model' control
         container2.getControl(GridControl.class).setCell(0, 0, createItem());
@@ -148,25 +152,6 @@ public class DragAndDropDemoState extends BaseAppState {
 
         geom.setMaterial(new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md"));
         return panel;
-    }
-
-    @Override
-    protected void cleanup( Application app ) {
-    }
-
-    @Override
-    protected void onEnable() {
-        ((DemoLauncher)getApplication()).getRootNode().attachChild(dndRoot);
-    }
-
-    @Override
-    protected void onDisable() {
-        dndRoot.removeFromParent();
-    }
-
-    @Override
-    public void update( float tpf ) {
-        //System.out.println("-------- update -----");
     }
 
     /**
@@ -412,8 +397,7 @@ public class DragAndDropDemoState extends BaseAppState {
                 // We only left it so we could easily get its world location/rotation.
                 item.removeFromParent();
 
-                return new DefaultDraggable(event.getViewPort(), drag, event.getLocation()) {
-                };
+                return new DefaultDraggable(event.getViewPort(), drag, event.getLocation());
             }
             return null;
         }
