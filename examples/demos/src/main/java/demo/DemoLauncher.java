@@ -94,8 +94,8 @@ public class DemoLauncher extends SimpleApplication {
         }*/        
         
         main.setSettings(settings);
-        
-        main.start();
+        DragAndDropDemoState drag = new DragAndDropDemoState();
+        drag.start();
     }
 
     public DemoLauncher() {
