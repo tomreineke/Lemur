@@ -39,24 +39,30 @@ package demo;
 import java.util.*;
 
 import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
+import com.jme3.app.state.BaseAppState;
 import com.jme3.asset.AssetManager;
 import com.jme3.input.event.*;
+import com.jme3.light.*;
 import com.jme3.material.*;
+import com.jme3.material.RenderState.BlendMode;
+import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.*;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
+import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.*;
+import com.jme3.scene.Spatial.CullHint;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.debug.WireBox;
 import com.jme3.scene.shape.*;
 
 import com.jme3.scene.shape.Line;
 import com.simsilica.lemur.*;
+import com.simsilica.lemur.component.IconComponent;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.dnd.*;
 import com.simsilica.lemur.core.GuiMaterial;
 import com.simsilica.lemur.event.*;
-import com.simsilica.lemur.style.BaseStyles;
 import javafx.util.Pair;
 
 /**
@@ -64,7 +70,9 @@ import javafx.util.Pair;
  *
  *  @author    Paul Speed
  */
-public class DragAndDropDemoState extends SimpleApplication {
+public class DragAndDropDemoState extends BaseAppState {
+
+    private Node dndRoot;
 
     private ColorRGBA containerColor = new ColorRGBA(1, 1, 0, 0.5f);
     private ColorRGBA containerHighlight = new ColorRGBA(0, 1, 0, 0.5f);
@@ -75,35 +83,25 @@ public class DragAndDropDemoState extends SimpleApplication {
     private AssetManager assetManager;
 
     private static final int GRID_SIZE = 5;
-    private static final float LOCAL_SCALE = 13.5f;
+    private static final float LOCAL_SCALE = 0.3f;
+    private static final float LOCAL_TRANSLATION_FOR_ICONS = 0.6f;
 
     public DragAndDropDemoState() {
     }
 
-    @Override
-    public void simpleInitApp() {
-        setPauseOnLostFocus(false);
-        setDisplayFps(false);
-        setDisplayStatView(false);
-
-        GuiGlobals.initialize(this);
-
-        GuiGlobals globals = GuiGlobals.getInstance();
-        BaseStyles.loadGlassStyle();
-        globals.getStyles().setDefaultStyle("glass");
-        initialize(this);
-    }
-
     protected Node getRoot() {
-        return guiNode;
+        return dndRoot;
     }
 
+    @Override
     protected void initialize( Application app ) {
+        dndRoot = new Node("dndRoot");
+
         this.assetManager = app.getAssetManager();
 
         container1 = new ContainerNode("container2", containerColor);
         container1.setSize(GRID_SIZE, GRID_SIZE, 0);
-        container1.setLocalTranslation(200f, 100f, 0.5f);
+        container1.setLocalTranslation(0f, 0f, 0.5f);
         container1.setLocalScale(LOCAL_SCALE);
         MouseEventControl.addListenersToSpatial(container1,
                 new HighlightListener(container1.material,
@@ -111,7 +109,7 @@ public class DragAndDropDemoState extends SimpleApplication {
                         containerColor));
         container1.addControl(new GridControl(GRID_SIZE));
         container1.addControl(new DragAndDropControl(new GridContainerListener(container1)));
-        getRoot().attachChild(container1);
+        dndRoot.attachChild(container1);
 
         // Add some random items to our MVC grid 'model' control
         container1.getControl(GridControl.class).setCell(0, 0, createItem());
@@ -120,7 +118,7 @@ public class DragAndDropDemoState extends SimpleApplication {
         // Setup a grid based container
         container2 = new ContainerNode("container2", containerColor);
         container2.setSize(GRID_SIZE, GRID_SIZE, 0);
-        container2.setLocalTranslation(400f, 100f, 0.5f);
+        container2.setLocalTranslation(4f, 0f, 0.5f);
         container2.setLocalScale(LOCAL_SCALE);
         MouseEventControl.addListenersToSpatial(container2,
                 new HighlightListener(container2.material,
@@ -128,7 +126,7 @@ public class DragAndDropDemoState extends SimpleApplication {
                         containerColor));
         container2.addControl(new GridControl(GRID_SIZE));
         container2.addControl(new DragAndDropControl(new GridContainerListener(container2)));
-        getRoot().attachChild(container2);
+        dndRoot.attachChild(container2);
 
         // Add some random items to our MVC grid 'model' control
         container2.getControl(GridControl.class).setCell(0, 0, createItem());
@@ -137,6 +135,9 @@ public class DragAndDropDemoState extends SimpleApplication {
 
     private Spatial createItem() {
         Sphere sphere = new Sphere(12, 24, 0.9f);
+        Panel panel = new Panel();
+        panel.setBackground(new IconComponent("test24.png", 0.05f, 0,0,0.5f,false));
+
         Geometry geom = new Geometry("item", sphere);
 
         // Create a random color
@@ -146,7 +147,26 @@ public class DragAndDropDemoState extends SimpleApplication {
         //ColorRGBA color = new ColorRGBA(r, g, b, 1);
 
         geom.setMaterial(new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md"));
-        return geom;
+        return panel;
+    }
+
+    @Override
+    protected void cleanup( Application app ) {
+    }
+
+    @Override
+    protected void onEnable() {
+        ((DemoLauncher)getApplication()).getRootNode().attachChild(dndRoot);
+    }
+
+    @Override
+    protected void onDisable() {
+        dndRoot.removeFromParent();
+    }
+
+    @Override
+    public void update( float tpf ) {
+        //System.out.println("-------- update -----");
     }
 
     /**
@@ -285,7 +305,7 @@ public class DragAndDropDemoState extends SimpleApplication {
                 for( int y = 0; y < gridSize; y++ ) {
                     Spatial child = grid[x][y];
                     if( child != null ) {
-                        child.setLocalTranslation(-(gridSize - 1) + x * 2, (gridSize - 1) - y * 2, 0);
+                        child.setLocalTranslation(-(gridSize - 1) + x * 2 - LOCAL_TRANSLATION_FOR_ICONS, (gridSize - 1) - y * 2 + LOCAL_TRANSLATION_FOR_ICONS, 0);
                     }
                 }
             }
@@ -392,7 +412,8 @@ public class DragAndDropDemoState extends SimpleApplication {
                 // We only left it so we could easily get its world location/rotation.
                 item.removeFromParent();
 
-                return new ColoredDraggable(event.getViewPort(), drag, event.getLocation());
+                return new DefaultDraggable(event.getViewPort(), drag, event.getLocation()) {
+                };
             }
             return null;
         }
@@ -463,29 +484,6 @@ public class DragAndDropDemoState extends SimpleApplication {
                     // try to deal with it
                     getModel().addChild(draggedItem);
                 }
-            }
-        }
-    }
-
-    private class ColoredDraggable extends DefaultDraggable {
-
-        private Material originalMaterial;
-        private Geometry geom;
-
-        public ColoredDraggable( ViewPort view, Spatial spatial, Vector2f start ) {
-            super(view, spatial, start);
-            this.geom = (Geometry)spatial;
-            this.originalMaterial = geom.getMaterial();
-        }
-
-        @Override
-        public void updateDragStatus( DragStatus status ) {
-            switch( status ) {
-                case ValidTarget:
-                    geom.setMaterial(originalMaterial);
-                    break;
-                default:
-                    break;
             }
         }
     }
