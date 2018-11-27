@@ -75,6 +75,9 @@ public class DragAndDropDemoState extends SimpleApplication {
 
     private AssetManager assetManager;
 
+    private UUID uuidVisualForDragging = new UUID(4711, 42);
+
+    private static final Vector3f HIDDEN = new Vector3f(-100, -100, -100);
     private static final int GRID_SIZE = 5;
     private static final float LOCAL_SCALE = 13.5f;
     private static final float LOCAL_TRANSLATION_FOR_ICONS = 0.6f;
@@ -373,6 +376,12 @@ public class DragAndDropDemoState extends SimpleApplication {
             // See where we hit
             Vector2f hit = getCellLocation(event.getCollision().getContactPoint());
 
+            Spatial visualForDragging = createItem();
+            visualForDragging.setLocalScale(LOCAL_SCALE);
+            visualForDragging.setName(uuidVisualForDragging.toString());
+            visualForDragging.setLocalTranslation(HIDDEN);
+            guiNode.attachChild(visualForDragging);
+
             // Remove the item from the grid if it exists.
             Spatial item = control.removeCell((int)hit.x, (int)hit.y);
             if( item != null ) {
@@ -387,7 +396,7 @@ public class DragAndDropDemoState extends SimpleApplication {
                 // Clone the dragged item to use in our draggable and stick the
                 // clone in the root at the same world location.
                 Spatial drag = item.clone();
-                drag.setLocalTranslation(item.getWorldTranslation());
+                drag.setLocalTranslation(HIDDEN);
                 drag.setLocalRotation(item.getWorldRotation());
                 drag.setLocalScale(LOCAL_SCALE);
                 getRoot().attachChild(drag);
@@ -415,9 +424,9 @@ public class DragAndDropDemoState extends SimpleApplication {
 
             Vector2f hit = getCellLocation(event.getCollision().getContactPoint());
             Spatial item = getModel().getCell((int)hit.x, (int)hit.y);
-            Spatial draggedItem = guiNode.getChild(guiNode.getChildren().size() - 1);
-            Vector3f translation = draggedItem.getLocalTranslation();
-            System.out.println("draggable position x: " + translation.x + ", y: " + translation.y + ", z: " + translation.z);
+
+            Spatial visualForDragging = guiNode.getChild(uuidVisualForDragging.toString());
+            visualForDragging.setLocalTranslation(event.getX(), event.getY(), 0.5f);
 
             if( item == null ) {
                 // An empty cell is a valid target
@@ -431,6 +440,7 @@ public class DragAndDropDemoState extends SimpleApplication {
         // Target specific
         public void onDrop( DragEvent event ) {
             System.out.println("Grid.onDrop(" + event + ")");
+            guiNode.detachChild(guiNode.getChild(uuidVisualForDragging.toString()));
 
             Spatial draggedItem = event.getSession().get(DragSession.ITEM, null);
 
